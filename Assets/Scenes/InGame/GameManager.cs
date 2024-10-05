@@ -32,12 +32,14 @@ public class GameManager : MonoBehaviour
             .ForEach(b => b.button.onClick.AddListener(() => OnColorButtonPressed(b.index + 1)));
 
         UpdateTimerText();
-        UpdateBestScoreText();
     }
 
     void Update()
     {
-        if (!isGameActive || (timeRemaining -= Time.deltaTime) > 0)
+        if (!isGameActive) return;
+
+        timeRemaining -= Time.deltaTime;
+        if (timeRemaining > 0)
         {
             UpdateTimerText();
         }
@@ -50,10 +52,11 @@ public class GameManager : MonoBehaviour
     void UpdateTimerText() =>
         timerText.text = timerText != null ? $"Time: {Mathf.Max(0, Mathf.RoundToInt(timeRemaining))}" : throw new System.Exception("TimerText is not assigned!");
 
-    void UpdateBestScoreText()
+    void UpdateScoreText()
     {
         int bestScore = PlayerPrefs.GetInt(BestScoreKey, 0);
         bestScoreText.text = $"{bestScore}";
+        scoreText.text = $"{correctGuessCount}";
     }
 
     void OnColorButtonPressed(int buttonIndex)
@@ -68,7 +71,6 @@ public class GameManager : MonoBehaviour
     {
         timeRemaining += 2f;
         correctGuessCount++;
-        scoreText.text = $"{correctGuessCount}";
 
         ApplyRandomHDAParameters();
     }
@@ -116,7 +118,9 @@ public class GameManager : MonoBehaviour
 
         try
         {
-            hdaAsset.RequestCook(true, true, true, true);
+            var task = hdaAsset.RequestCook(true);
+            DisplayErrorMessage($"{task}");
+            
         }
         catch (System.Exception ex)
         {
@@ -192,7 +196,7 @@ public class GameManager : MonoBehaviour
             PlayerPrefs.Save();
         }
 
-        UpdateBestScoreText();
+        UpdateScoreText();
         colorButtons.ToList().ForEach(button => button.interactable = false);
 
         if (correctTotalIndex < 1 || correctTotalIndex > colorButtons.Length)
@@ -225,15 +229,7 @@ public class GameManager : MonoBehaviour
     /// <param name="message">The error message to display</param>
     void DisplayErrorMessage(string message)
     {
-        if (errorMessageText != null)
-        {
-            errorMessageText.text += $"{message}\n";
-
-        }
-        else
-        {
-            Debug.LogError("ErrorMessageText component is not assigned!");
-        }
+        errorMessageText.text += $"{message}\n";
     }
 }
 
