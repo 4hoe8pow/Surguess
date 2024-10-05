@@ -8,16 +8,17 @@ public class GameManager : MonoBehaviour
     public Text timerText;
     public Text scoreText;
     public Text bestScoreText;
+    public Text errorMessageText;
     public Button[] colorButtons;
     public HDAAttributeReader attributeReader;
-    public GameObject gameEndPopup;  // Panel for game over popup
-    public Image dimmedBackground;   // Dim background image
+    public GameObject gameEndPopup;
+    public Image dimmedBackground;
 
     private float timeRemaining = 60f;
     private bool isGameActive = true;
     private int correctTotalIndex;
-    private int correctGuessCount = 0;  // Track correct guesses
-    private const string BestScoreKey = "BestScore";  // Key for best score in PlayerPrefs
+    private int correctGuessCount = 0;
+    private const string BestScoreKey = "BestScore";
 
     void Start()
     {
@@ -66,114 +67,96 @@ public class GameManager : MonoBehaviour
     void OnCorrectButtonPressed()
     {
         timeRemaining += 2f;
-        correctGuessCount++;  // Increment correct guesses
-        scoreText.text = $"{correctGuessCount}";  // Update score display
+        correctGuessCount++;
+        scoreText.text = $"{correctGuessCount}";
 
         ApplyRandomHDAParameters();
     }
 
     void ApplyRandomHDAParameters()
-{
-    // HDAアセットを取得
-    var hdaAsset = attributeReader.GetComponentInChildren<HEU_HoudiniAsset>();
-    
-    // HDAアセットが見つからなかった場合のエラーハンドリング
-    if (hdaAsset == null)
     {
-        Debug.LogError("Houdini Asset not found in the Attribute Reader.");
-        return;
-    }
+        // HDAアセットを取得
+        var hdaAsset = attributeReader.GetComponentInChildren<HEU_HoudiniAsset>();
 
-    // HDAパラメータを取得
-    var hdaParams = hdaAsset.Parameters;
-    
-    // HDAパラメータが見つからなかった場合のエラーハンドリング
-    if (hdaParams == null)
-    {
-        Debug.LogError("HDA parameters not found in the Houdini Asset.");
-        return;
-    }
 
-    // ランダムカラーを生成
-    Color[] colors = null;
-    try
-    {
-        colors = GenerateSquareHarmonyColors();
-    }
-    catch (System.Exception ex)
-    {
-        Debug.LogError($"Error generating square harmony colors: {ex.Message}");
-        return;
-    }
-
-    // HDAパラメータにランダム値を適用
-    try
-    {
-        hdaParams.ApplyHDAParameters(colors[0], colors[1], colors[2], colors[3], Random.Range(0.0f, 10.0f), Random.Range(0.0f, 10.0f));
-    }
-    catch (System.Exception ex)
-    {
-        Debug.LogError($"Error applying HDA parameters: {ex.Message}");
-        return;
-    }
-
-    // アセットの変更を適用
-    try
-    {
-        hdaAsset.RequestCook(true);
-    }
-    catch (System.Exception ex)
-    {
-        Debug.LogError($"Error requesting cook on Houdini Asset: {ex.Message}");
-        return;
-    }
-
-    // ボタンの色を更新
-    for (int i = 0; i < colorButtons.Length; i++)
-    {
-        
-        // ボタンイメージが見つからない場合のエラーハンドリング
-        if (!colorButtons[i].TryGetComponent<Image>(out var buttonImage))
+        if (hdaAsset == null)
         {
-            Debug.LogError($"Image component not found on button {colorButtons[i].name}.");
-            continue; // スキップして次のボタンに進む
+            DisplayErrorMessage("Houdini Asset not found in the Attribute Reader.");
+            return;
         }
 
-        buttonImage.color = colors[i];
+        var hdaParams = hdaAsset.Parameters;
+
+        if (hdaParams == null)
+        {
+            DisplayErrorMessage("HDA parameters not found in the Houdini Asset.");
+            return;
+        }
+
+        Color[] colors = null;
+        try
+        {
+            colors = GenerateSquareHarmonyColors();
+        }
+        catch (System.Exception ex)
+        {
+            DisplayErrorMessage($"Error generating square harmony colors: {ex.Message}");
+            return;
+        }
+
+        try
+        {
+            hdaParams.ApplyHDAParameters(colors[0], colors[1], colors[2], colors[3], Random.Range(0.0f, 10.0f), Random.Range(0.0f, 10.0f));
+        }
+        catch (System.Exception ex)
+        {
+            DisplayErrorMessage($"Error applying HDA parameters: {ex.Message}");
+            return;
+        }
+
+        try
+        {
+            hdaAsset.RequestCook(true, true, true, true);
+        }
+        catch (System.Exception ex)
+        {
+            DisplayErrorMessage($"Error requesting cook on Houdini Asset: {ex.Message}");
+            return;
+        }
+
+        for (int i = 0; i < colorButtons.Length; i++)
+        {
+            if (!colorButtons[i].TryGetComponent<Image>(out var buttonImage))
+            {
+                DisplayErrorMessage($"Image component not found on button {colorButtons[i].name}.");
+                continue;
+            }
+
+            buttonImage.color = colors[i];
+        }
     }
-}
 
-
-    /// <summary>
-    /// Generates four distinct colors that form a square-like harmony on the color wheel.
-    /// </summary>
     Color[] GenerateSquareHarmonyColors()
     {
-        float minContrast = 0.4f; // Minimum contrast to avoid colors being too similar
+        float minContrast = 0.4f;
         Color[] selectedColors;
 
         do
         {
-            // Generate four colors equally spaced on the hue wheel (90 degrees apart)
             float baseHue = Random.Range(0f, 1f);
             selectedColors = new Color[4];
 
             for (int i = 0; i < 4; i++)
             {
-                // Offset hue by 90 degrees (1/4 of the color wheel)
                 float hue = (baseHue + (i * 0.25f)) % 1f;
-                selectedColors[i] = Color.HSVToRGB(hue, Random.Range(0.8f, 1f), Random.Range(0.8f, 1f)); // High saturation and brightness
+                selectedColors[i] = Color.HSVToRGB(hue, Random.Range(0.8f, 1f), Random.Range(0.8f, 1f));
             }
         }
-        // Repeat generation until all colors have sufficient contrast
         while (!AreColorsDistinct(selectedColors, minContrast));
 
         return selectedColors;
     }
 
-    /// <summary>
-    /// Ensures that all colors have a minimum contrast and are distinct from each other.
-    /// </summary>
     bool AreColorsDistinct(Color[] colors, float minContrast)
     {
         for (int i = 0; i < colors.Length; i++)
@@ -182,61 +165,76 @@ public class GameManager : MonoBehaviour
             {
                 if (ColorDifference(colors[i], colors[j]) < minContrast)
                 {
-                    return false; // Too similar
+                    return false;
                 }
             }
         }
         return true;
     }
 
-    /// <summary>
-    /// Computes the perceptual difference between two colors.
-    /// </summary>
     float ColorDifference(Color c1, Color c2)
     {
         return Mathf.Abs(c1.r - c2.r) + Mathf.Abs(c1.g - c2.g) + Mathf.Abs(c1.b - c2.b);
     }
 
     void EndGame(string reason)
-{
-    isGameActive = false;
-    timerText.text = reason;
-
-    // Dim background and show game end popup with score
-    dimmedBackground.gameObject.SetActive(true);
-    gameEndPopup.SetActive(true);
-
-    // Update the best score
-    int bestScore = PlayerPrefs.GetInt(BestScoreKey, 0);
-    if (correctGuessCount > bestScore)
     {
-        PlayerPrefs.SetInt(BestScoreKey, correctGuessCount);
-        PlayerPrefs.Save();
-    }
+        isGameActive = false;
+        timerText.text = reason;
 
-    UpdateBestScoreText();  // Show the best score on the popup
-    colorButtons.ToList().ForEach(button => button.interactable = false);  // Disable buttons
+        dimmedBackground.gameObject.SetActive(true);
+        gameEndPopup.SetActive(true);
 
-    // 不正解のボタンの色を消す
-    foreach (var button in colorButtons)
-    {
-        if (button == colorButtons[correctTotalIndex - 1]) // 正解のボタンはそのまま
+        int bestScore = PlayerPrefs.GetInt(BestScoreKey, 0);
+        if (correctGuessCount > bestScore)
         {
-            continue;
+            PlayerPrefs.SetInt(BestScoreKey, correctGuessCount);
+            PlayerPrefs.Save();
         }
 
-        // ボタンイメージを取得
-        if (button.TryGetComponent<Image>(out var buttonImage))
+        UpdateBestScoreText();
+        colorButtons.ToList().ForEach(button => button.interactable = false);
+
+        if (correctTotalIndex < 1 || correctTotalIndex > colorButtons.Length)
         {
-            buttonImage.color = Color.clear; // ボタンの色を透明にする
+            DisplayErrorMessage($"Invalid correctTotalIndex: {correctTotalIndex}. It should be between 1 and {colorButtons.Length}.");
+            return;
+        }
+
+        foreach (var button in colorButtons)
+        {
+            if (button == colorButtons[correctTotalIndex - 1])
+            {
+                continue;
+            }
+
+            if (button.TryGetComponent<Image>(out var buttonImage))
+            {
+                buttonImage.color = Color.clear;
+            }
+            else
+            {
+                DisplayErrorMessage($"Image component not found on button {button.name}.");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Displays error messages on the screen using a UI Text component.
+    /// </summary>
+    /// <param name="message">The error message to display</param>
+    void DisplayErrorMessage(string message)
+    {
+        if (errorMessageText != null)
+        {
+            errorMessageText.text += $"{message}\n";
+
         }
         else
         {
-            Debug.LogError($"Image component not found on button {button.name}.");
+            Debug.LogError("ErrorMessageText component is not assigned!");
         }
     }
-}
-
 }
 
 public static class HDAParameterExtensions
