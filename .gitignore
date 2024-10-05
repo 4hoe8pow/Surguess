@@ -1,0 +1,119 @@
+# =============== #
+# Unity generated #
+# =============== #
+
+# OS generated files #
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# User-specific files #
+.vscode/
+.idea/
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.opendb
+*.VC.db
+
+# Mono auto generated files #
+*.pidb
+*.mdb
+*.pdb
+
+# Unity3D generated file #
+*.unityproj
+*.cubemap
+*.pidb
+*.mapprefab
+*.asset
+
+# Builds #
+*.apk
+*.aab
+*.unitypackage
+*.app
+*.ipa
+*.exe
+*.dll
+*.pdb
+*.wasm
+*.mem
+*.symbols.json
+*.js
+*.html
+*.webm
+*.data
+*.sym
+*.dev
+
+# Packed scenes #
+*.unityPackage
+
+# Gradle cache files #
+.gradle/
+
+# Crashlytics generated files #
+crashlytics.properties
+
+# Lightning build cache
+LightningCache/
+
+# =============== #
+# Unity metadata  #
+# =============== #
+Library/
+Temp/
+Obj/
+Build/
+Builds/
+Logs/
+MemoryCaptures/
+*.stackdump
+
+# Uncomment if your project includes Android dependencies
+# Android/
+# gradle/
+
+# Asset Server #
+sysinfo.txt
+sysinfo.xml
+
+# =============== #
+# Unity exclusions #
+# =============== #
+*.csproj
+*.unityproj
+*.sln
+*.sln.DotSettings.user
+*.sln.DotSettings
+*.csproj.DotSettings.user
+*.pidb
+*.userprefs
+
+# ======== #
+# Packages #
+# ======== #
+Packages/*
+!Packages/manifest.json
+!Packages/packages-lock.json
+
+# ==== #
+# Text #
+# ==== #
+# Custom YAML merge configs for scripts, shaders, text, json files
+*.csv
+*.json
+*.yaml
+*.yml
+
+Assets/Plugins
